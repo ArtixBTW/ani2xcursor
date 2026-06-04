@@ -86,38 +86,22 @@ CursorImage rescale_cursor(const CursorImage& src, uint32_t target_size) {
     out.hotspot_y = static_cast<uint16_t>(
         std::clamp(std::round(src.hotspot_y * scale_y), 0.0, static_cast<double>(new_h - 1)));
 
-    auto sample = [&](int x, int y, int c) -> uint8_t {
-        size_t idx = (static_cast<size_t>(y) * src.width + static_cast<size_t>(x)) * 4 + c;
-        return src.pixels[idx];
-    };
-
     for (uint32_t y = 0; y < new_h; ++y) {
-        double src_y = (static_cast<double>(y) + 0.5) * src.height / new_h - 0.5;
-        int y0 = static_cast<int>(std::floor(src_y));
-        int y1 = y0 + 1;
-        double fy = src_y - y0;
-        y0 = std::clamp(y0, 0, static_cast<int>(src.height) - 1);
-        y1 = std::clamp(y1, 0, static_cast<int>(src.height) - 1);
+        uint32_t src_y = static_cast<uint32_t>(
+            std::min(static_cast<uint32_t>(y * src.height / new_h), src.height - 1)
+        );
 
         for (uint32_t x = 0; x < new_w; ++x) {
-            double src_x = (static_cast<double>(x) + 0.5) * src.width / new_w - 0.5;
-            int x0 = static_cast<int>(std::floor(src_x));
-            int x1 = x0 + 1;
-            double fx = src_x - x0;
-            x0 = std::clamp(x0, 0, static_cast<int>(src.width) - 1);
-            x1 = std::clamp(x1, 0, static_cast<int>(src.width) - 1);
+            uint32_t src_x = static_cast<uint32_t>(
+                std::min(static_cast<uint32_t>(x * src.width / new_w), src.width - 1)
+            );
 
-            for (int c = 0; c < 4; ++c) {
-                double v00 = sample(x0, y0, c);
-                double v10 = sample(x1, y0, c);
-                double v01 = sample(x0, y1, c);
-                double v11 = sample(x1, y1, c);
-                double v0 = v00 + (v10 - v00) * fx;
-                double v1 = v01 + (v11 - v01) * fx;
-                double v = v0 + (v1 - v0) * fy;
-                out.pixels[(static_cast<size_t>(y) * new_w + x) * 4 + c] =
-                    static_cast<uint8_t>(std::clamp(std::round(v), 0.0, 255.0));
-            }
+            size_t src_idx = (static_cast<size_t>(src_y) * src.width + src_x) * 4;
+            size_t dst_idx = (static_cast<size_t>(y) * new_w + x) * 4;
+            out.pixels[dst_idx]     = src.pixels[src_idx];
+            out.pixels[dst_idx + 1] = src.pixels[src_idx + 1];
+            out.pixels[dst_idx + 2] = src.pixels[src_idx + 2];
+            out.pixels[dst_idx + 3] = src.pixels[src_idx + 3];
         }
     }
 
