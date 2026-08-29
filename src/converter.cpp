@@ -1,5 +1,6 @@
 #include "converter.h"
 
+#include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -10,7 +11,6 @@
 #include "ani_parser.h"
 #include "size_selection.h"
 #include "size_tools.h"
-#include <spdlog/fmt/fmt.h>
 #include "utils/fs.h"
 
 namespace ani2xcursor {
@@ -79,7 +79,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_ani_file(
             for (size_t step = 0; step < frames_by_step.size(); ++step) {
                 const auto& img = frames_by_step[step][source_idx];
                 if (needs_rescale) {
-                    decoded_frames.push_back(rescale_cursor(img, target_size));
+                    decoded_frames.push_back(rescale_cursor(img, target_size, true));
                 } else {
                     decoded_frames.push_back(img);
                 }
@@ -155,7 +155,7 @@ std::pair<std::vector<CursorImage>, std::vector<uint32_t>> process_cur_file(
             if (needs_rescale) {
                 spdlog::info(spdlog::fmt_lib::runtime(_("Rescaling {}x{} -> {}x{}")), source_size,
                              source_size, target_size, target_size);
-                decoded_images.push_back(rescale_cursor(images[source_idx], target_size));
+                decoded_images.push_back(rescale_cursor(images[source_idx], target_size, true));
             } else {
                 decoded_images.push_back(images[source_idx]);
             }
